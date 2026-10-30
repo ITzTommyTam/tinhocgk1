@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Ôn tập GK1 – Bài 7–10 | Tin học 12</title>
+<style>
+:root{--p:#1d4ed8;--pl:#dbeafe;--ok:#047857;--okb:#d1fae5;--er:#b91c1c;--erb:#fee2e2;--w:#b45309;--bg:#f1f5f9;--c:#fff;--t:#0f172a;--m:#64748b}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--t);min-height:100vh;padding:10px;display:flex;justify-content:center}
+.app{width:100%;max-width:520px}
+header{text-align:center;padding:10px 0 6px}
+header h1{font-size:1.08rem;color:var(--p)}
+header p{font-size:.8rem;color:var(--m)}
+.card{background:var(--c);border-radius:14px;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.07);margin-bottom:12px}
+label{font-size:.85rem;font-weight:600;display:block;margin:10px 0 4px}
+select,input[type=number]{width:100%;padding:9px 10px;border:2px solid #e2e8f0;border-radius:9px;font-size:.9rem;margin-bottom:4px}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.mode-btn{padding:10px 8px;border:2px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:.82rem;font-weight:600;text-align:center;line-height:1.3}
+.mode-btn.active{border-color:var(--p);background:var(--pl);color:var(--p)}
+.mode-btn small{display:block;font-weight:400;color:var(--m);font-size:.72rem;margin-top:2px}
+.timer-bar{height:7px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin-bottom:8px}
+.timer-fill{height:100%;background:var(--p);transition:width .2s linear}
+.timer-fill.warn{background:var(--w)}.timer-fill.danger{background:var(--er)}
+.meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:.78rem;color:var(--m);margin-bottom:10px}
+.timer-text{font-weight:700;color:var(--p)}.timer-text.warn{color:var(--w)}.timer-text.danger{color:var(--er)}
+.round-tag{background:var(--pl);color:var(--p);padding:2px 8px;border-radius:99px;font-size:.72rem;font-weight:700}
+.question{font-size:.93rem;font-weight:600;line-height:1.45;margin-bottom:12px}
+.options{display:flex;flex-direction:column;gap:7px}
+.option{display:flex;gap:8px;padding:10px 11px;border:2px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:.86rem;line-height:1.35;text-align:left}
+.option:hover:not(.disabled){border-color:var(--p);background:#eff6ff}
+.option.correct{border-color:var(--ok);background:var(--okb)}.option.wrong{border-color:var(--er);background:var(--erb)}
+.option.disabled{cursor:default}
+.opt-letter{font-weight:700;color:var(--p);min-width:16px}
+.btn{display:block;width:100%;padding:12px;border:none;border-radius:11px;font-size:.95rem;font-weight:600;cursor:pointer;margin-top:10px}
+.btn-primary{background:var(--p);color:#fff}.btn-primary:disabled{background:#94a3b8;cursor:not-allowed}
+.btn-success{background:var(--ok);color:#fff}
+.feedback{margin-top:10px;padding:9px;border-radius:9px;font-size:.84rem;font-weight:500}
+.feedback.ok{background:var(--okb);color:var(--ok)}.feedback.err{background:var(--erb);color:var(--er)}
+.hidden{display:none!important}
+.result{text-align:center;padding:16px 6px}
+.result .big{font-size:2.3rem;font-weight:800;color:var(--p);margin:8px 0}
+footer{text-align:center;font-size:.68rem;color:var(--m);padding:6px 0 14px}
+.tf-row{margin-bottom:9px}.tf-text{font-size:.84rem;margin-bottom:4px;line-height:1.35}
+.tf-btns{display:flex;gap:6px}.tf-btns .option{flex:1;justify-content:center}
+.hint{font-size:.78rem;color:var(--m);margin-top:4px;line-height:1.4}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <h1>Ôn tập Giữa kỳ 1 · Bài 7–10</h1>
+  <p>Nhiều lựa chọn + Đúng/Sai · Có đếm giờ · Xáo trộn</p>
+</header>
+
+<div id="setup" class="card">
+  <h2 style="font-size:1rem;margin-bottom:6px">Chọn cách chơi</h2>
+  <div class="mode-grid" id="mode-grid">
+    <button class="mode-btn active" data-mode="round" onclick="setMode('round')">Theo vòng (1 bài)
+      <small>Phù hợp trên lớp 45p</small>
+    </button>
+    <button class="mode-btn" data-mode="sample" onclick="setMode('sample')">Ngẫu nhiên N câu
+      <small>Chọn số câu, ôn nhanh</small>
+    </button>
+    <button class="mode-btn" data-mode="full" onclick="setMode('full')">Toàn bộ ngân hàng
+      <small>Ôn ở nhà, đủ ~100 câu</small>
+    </button>
+    <button class="mode-btn" data-mode="lesson" onclick="setMode('lesson')">Chọn 1 bài
+      <small>Chỉ ôn 1 bài cụ thể</small>
+    </button>
+  </div>
+
+  <div id="opt-round">
+    <label>Chọn vòng / bài</label>
+    <select id="sel-round">
+      <option value="b7">Vòng 1 · Bài 7 (HTML & cấu trúc trang web)</option>
+      <option value="b8">Vòng 2 · Bài 8 (Định dạng văn bản)</option>
+      <option value="b9">Vòng 3 · Bài 9 (Danh sách, bảng)</option>
+      <option value="b10">Vòng 4 · Bài 10 (Tạo liên kết)</option>
+    </select>
+  </div>
+  <div id="opt-sample" class="hidden">
+    <label>Số câu muốn làm</label>
+    <input type="number" id="num-sample" value="20" min="5" max="100"/>
+    <p class="hint">Gợi ý lớp 45p: 15–25 câu. Ở nhà có thể 40–60 câu.</p>
+  </div>
+  <div id="opt-lesson" class="hidden">
+    <label>Chọn bài</label>
+    <select id="sel-lesson">
+      <option value="b7">Bài 7</option>
+      <option value="b8">Bài 8</option>
+      <option value="b9">Bài 9</option>
+      <option value="b10">Bài 10</option>
+    </select>
+  </div>
+
+  <label>Thời gian – Nhiều lựa chọn (giây)</label>
+  <input type="number" id="time-mc" value="60" min="15" max="180"/>
+  <label>Thời gian – Đúng/Sai (giây)</label>
+  <input type="number" id="time-tf" value="75" min="20" max="180"/>
+  <p class="hint">Em có thể chỉnh số giây trước khi bắt đầu cho phù hợp.</p>
+  <button class="btn btn-primary" onclick="startGame()">Bắt đầu</button>
+</div>
+
+<div id="game" class="hidden">
+  <div class="card">
+    <div class="timer-bar"><div class="timer-fill" id="timer-fill"></div></div>
+    <div class="meta">
+      <span class="round-tag" id="round-tag">—</span>
+      <span id="q-counter">Câu 1</span>
+      <span class="timer-text" id="timer-text">60s</span>
+      <span id="score-display">Điểm: 0</span>
+    </div>
+    <div class="question" id="q-text"></div>
+    <div class="options" id="options"></div>
+    <div id="feedback" class="feedback hidden"></div>
+    <button class="btn btn-primary" id="next-btn" onclick="nextQ()" disabled>Câu tiếp</button>
+  </div>
+</div>
+
+<div id="result" class="card result hidden">
+  <h2>Hoàn thành!</h2>
+  <div class="big" id="final-score">0</div>
+  <p id="result-msg" style="color:var(--m);margin-bottom:8px"></p>
+  <p id="detail-score" style="color:var(--m);font-size:.85rem;margin-bottom:12px"></p>
+  <button class="btn btn-success" onclick="location.reload()">Chơi lại</button>
+</div>
+<footer>Tin học 12 · Kết nối tri thức · Ngân hàng ôn tập GK1 Bài 7–10</footer>
+</div>
+
+<script>
+const BANK = {
+b7:{
+name:"Bài 7",
+mc:[
+{q:'Đoạn mã nào biểu diễn đúng cấu trúc tiêu đề trang trong phần <head>?',opts:['<body><title>Bài tập HTML số 1</title></body>','<head><title>Bài tập HTML số 1</title></head>','<body title="Bài tập HTML số 1"></body>','<title><head>Bài tập HTML số 1</head></title>'],a:1},
+{q:'Thẻ nào hiển thị dòng chữ "Xin chào HTML" dưới dạng tiêu đề cấp 1?',opts:['<p>Xin chào HTML</p>','<h1>Xin chào HTML</h1>','<title>Xin chào HTML</title>','<meta>Xin chào HTML</meta>'],a:1},
+{q:'Để trang web hiển thị đúng tiếng Việt có dấu, khai báo nào đặt trong <head>?',opts:['<p charset="UTF-8">','<meta charset="VN">','<meta charset="UTF-8">','<html charset="UTF-8">'],a:2},
+{q:'Đoạn mã nào dùng để biểu diễn tiêu đề cấp 2 "HTML là gì?"?',opts:['<h1>HTML là gì?</h1>','<h2>HTML là gì?</h2>','<h3>HTML là gì?</h3>','<p>HTML là gì?</p>'],a:1},
+{q:'Thẻ nào được chèn để tạo đường kẻ ngang phân cách?',opts:['<br>','<hr>','<p>','<h1>'],a:1},
+{q:'Để thêm đoạn văn bản giới thiệu bản thân, thẻ nào được sử dụng?',opts:['<h1>','<head>','<p>','<hr>'],a:2},
+{q:'Ứng dụng nào là phần mềm soạn thảo mã HTML chuyên dụng?',opts:['Google Chrome','Microsoft Edge','Sublime Text','TextEdit'],a:2},
+{q:'Khi mở tệp HTML bằng trình duyệt, nội dung nào KHÔNG xuất hiện trực tiếp trên vùng nội dung trang?',opts:['Nội dung trong thẻ <h1>','Nội dung trong thẻ <p>','Nội dung trong thẻ <title>','Nội dung nằm giữa <body> và </body>'],a:2},
+{q:'Cho đoạn mã có <br> trong thẻ <p>. Kết quả hiển thị như thế nào?',opts:['Các thông tin nằm trên 3 đoạn văn riêng biệt','Các thông tin nằm trong cùng đoạn văn nhưng mỗi thông tin xuống dòng mới','Hiển thị thẳng hàng trên cùng một dòng','Có đường kẻ ngang phân cách'],a:1},
+{q:'Đoạn mã nào chứa lỗi cú pháp thẻ đóng/mở?',opts:['<h1>Xin chào HTML</h1>','<p>Giới thiệu<br>Tuổi: 18</p>','<h3>Phần mềm soạn thảo HTML /h3','<p>Nội dung đoạn văn</p>'],a:2},
+{q:'Bạn Nam thấy tiêu đề tab trình duyệt hiển thị đường dẫn file thay vì "Bài tập HTML số 1". Nguyên nhân?',opts:['Chưa thêm thẻ <h1> vào <body>','Chưa khai báo hoặc viết sai thẻ <title> trong <head>','Chưa thêm <meta charset="UTF-8">','Quên chèn thẻ <hr>'],a:1},
+{q:'Đoạn mã nào biểu diễn đúng danh sách phần mềm với ngắt dòng (Notepad++ / Sublime / VS Code)?',opts:['<p>Notepad++<hr>Sublime Text<hr>VS Code</p>','<p>Notepad++<br>Sublime Text<br>VS Code</p>','<h1>Notepad++</h1><h2>Sublime Text</h2><h3>VS Code</h3>','<meta>Notepad++</meta>'],a:1},
+{q:'Để hoàn thành trang web với cấu trúc chuẩn HTML5, đoạn mã nào đầy đủ nhất?',opts:['<h1>Xin chào</h1><p>Học HTML</p>','<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bài tập</title></head><body><h1>Xin chào</h1><p>Học HTML</p></body></html>','<!DOCTYPE html><head><h1>Xin chào</h1></head>','<html><title>Bài tập</title><h1>Xin chào</h1></html>'],a:1},
+{q:'Khi lưu file mã nguồn HTML để mở được dưới dạng trang web, phải lưu với đuôi nào?',opts:['.txt','.docx','.html','.pdf'],a:2},
+{q:'Khai báo nào bắt buộc ở dòng đầu tiên của tệp HTML chuẩn?',opts:['<html>','<!DOCTYPE html>','<head>','<body>'],a:1},
+{q:'Thẻ <br> là gì?',opts:['Thẻ đường kẻ ngang','Thẻ xuống dòng (không có thẻ đóng)','Thẻ tiêu đề cấp 1','Thẻ đoạn văn'],a:1},
+{q:'Phần nào của tệp HTML chứa nội dung người dùng nhìn thấy trên trang?',opts:['<head>','<title>','<body>','<!DOCTYPE>'],a:2},
+{q:'Thẻ <title> nằm ở đâu và có tác dụng gì?',opts:['Trong <body>, hiển thị trên trang','Trong <head>, hiển thị trên tab trình duyệt','Trong <html>, định dạng chữ','Không cần thẻ đóng'],a:1},
+{q:'Để hiển thị tiêu đề cấp 3 ngay dưới đường kẻ ngang, đoạn nào đúng?',opts:['<h3 hr>Danh sách</h3>','<hr><h3>Danh sách</h3>','<h3>Danh sách</h3><hr>','<br><h2>Danh sách</h2>'],a:1},
+{q:'Notepad++ và Visual Studio Code là gì?',opts:['Trình duyệt web','Phần mềm soạn thảo HTML chuyên dụng','Hệ điều hành','Phần mềm diệt virus'],a:1}
+],
+tf:[
+{q:'Về cấu trúc cơ bản và các thành phần của một tệp HTML.',st:[
+{t:'HTML là ngôn ngữ đánh dấu siêu văn bản dùng để tạo và thiết kế trang web.',c:true},
+{t:'Phần tử HTML gồm ba thành phần cơ bản: thẻ mở, nội dung và thẻ đóng.',c:true},
+{t:'Phần thân <body> của tệp HTML là nơi chứa các thông tin chung như tiêu đề trang web và bộ mã ký tự.',c:false},
+{t:'Để tạo tệp HTML có tiêu đề trang “Trang chủ”, ta đặt tiêu đề bên trong phần <head>.',c:true}
+]},
+{q:'Về phần mềm soạn thảo và các thẻ HTML cơ bản.',st:[
+{t:'Notepad++ và Visual Studio Code là các phần mềm soạn thảo HTML chuyên dụng.',c:true},
+{t:'Thẻ <br> là thẻ xuống dòng và là một ví dụ về thẻ không có thẻ đóng.',c:true},
+{t:'Khi muốn hiển thị tiếng Việt có dấu chính xác, ta cần bổ sung <meta charset="UTF-8"> vào phần <head>.',c:true},
+{t:'Để tạo dòng gạch ngang phân cách, ta sử dụng thẻ <br>.',c:false}
+]},
+{q:'Về cấu trúc và tiêu đề trang HTML.',st:[
+{t:'Khai báo <!DOCTYPE html> là thành phần bắt buộc ở dòng đầu tiên của tệp HTML chuẩn.',c:true},
+{t:'Thẻ <h1> được sử dụng để hiển thị tiêu đề lớn (Heading 1) trên trang web.',c:true},
+{t:'Để đặt tiêu đề tab trình duyệt, ta đặt <title> bên trong <body>.',c:false},
+{t:'Cấu trúc chuẩn gồm <!DOCTYPE html>, <html>, <head>, <body>.',c:true}
+]},
+{q:'Về tiêu đề và định dạng cơ bản.',st:[
+{t:'Tiêu đề cấp 2 và cấp 3 được thể hiện lần lượt qua <h2> và <h3>.',c:true},
+{t:'Thẻ <br> dùng để định dạng và hiển thị một đoạn văn bản hoàn chỉnh.',c:false},
+{t:'Cấu trúc phân cấp tiêu đề giúp trình duyệt hiểu bố cục tài liệu tốt hơn.',c:true},
+{t:'Để hiển thị tiêu đề cấp 2 “HTML là gì?” ta dùng <h2>HTML là gì?</h2>.',c:true}
+]},
+{q:'Về trang giới thiệu và thẻ phân cách.',st:[
+{t:'Thẻ <br> dùng để tạo đường kẻ ngang phân cách trên trang web.',c:false},
+{t:'Phần mềm soạn thảo HTML đơn giản có sẵn trên Windows là Notepad.',c:true},
+{t:'Kết hợp <h1>, <p>, <hr>, <h3> giúp trang web trình bày rõ ràng theo từng phần.',c:true},
+{t:'Thẻ <hr> dùng để tạo đường kẻ ngang phân cách.',c:true}
+]}
+]},
+b8:{
+name:"Bài 8",
+mc:[
+{q:'Cho <p style="color: blue; font-size: 18px;">Học tập chăm chỉ</p>. Dòng chữ sẽ có đặc điểm nào?',opts:['Chữ màu đỏ, cỡ 18px','Chữ màu xanh dương, cỡ 18px','Chữ màu xanh dương, cỡ mặc định','Chữ màu đen, cỡ 18px'],a:1},
+{q:'Để hiển thị công thức H₂O với số 2 nhỏ nằm phía dưới, cần dùng thẻ nào?',opts:['<sup>','<sub>','<small>','<del>'],a:1},
+{q:'Để tạo đường kẻ ngang phân chia nội dung, thẻ nào được dùng?',opts:['<br>','<hr>','<line>','<p>'],a:1},
+{q:'Khi muốn viết số mũ (ví dụ x²), thẻ nào đặt số 2 nhỏ và lệch lên trên?',opts:['<sub>','<sup>','<small>','<mark>'],a:1},
+{q:'Để ngắt dòng văn bản ngay tại vị trí đặt thẻ mà không tạo đoạn mới, dùng thẻ nào?',opts:['<p>','<br>','<hr>','<div>'],a:1},
+{q:'Để định dạng vừa in đậm vừa in nghiêng, kết hợp thẻ nào là phù hợp nhất?',opts:['<b><i>','<strong><em>','<u><s>','<mark><small>'],a:1},
+{q:'Để tạo hiệu ứng gạch ngang qua một từ (strikethrough), thẻ nào phù hợp?',opts:['<u>','<del> hoặc <s>','<em>','<mark>'],a:1},
+{q:'Cho <p>Môn học <strong>Tin học</strong> rất thú vị.</p>. Từ "Tin học" sẽ như thế nào?',opts:['Chữ in nghiêng màu đỏ','Chữ in đậm (nhấn mạnh ngữ nghĩa)','Chữ gạch chân','Chữ cỡ rất nhỏ'],a:1},
+{q:'Điểm khác biệt quan trọng giữa <div> và <span> là gì?',opts:['<div> tự động xuống dòng và chiếm chiều rộng, <span> nằm nối tiếp trên cùng dòng','<span> dùng tạo chữ to, <div> tạo chữ nhỏ','<div> bắt buộc màu đỏ','Không có khác biệt'],a:0},
+{q:'Để tạo hiệu ứng tô sáng (highlight) một từ khóa giống bút dạ quang, dùng thẻ nào?',opts:['<mark>','<small>','<u>','<del>'],a:0},
+{q:'Bạn muốn trình bày công thức A = X². Đoạn mã nào chuẩn nhất?',opts:['<p>A = X<sup>2</sup></p>','<p>A = X<sub>2</sub></p>','<p>A = X<b>2</b></p>','<p>A = X<small>2</small></p>'],a:0},
+{q:'Thuộc tính style dùng để làm gì?',opts:['Tạo liên kết','Định dạng màu, phông, cỡ chữ… cho phần tử','Chèn hình ảnh','Khai báo tiêu đề trang'],a:1},
+{q:'Thẻ <em> thường được dùng để?',opts:['In đậm','In nghiêng nhấn mạnh ngữ nghĩa','Gạch chân','Tạo đường kẻ ngang'],a:1},
+{q:'Thẻ <strong> ưu tiên hơn <b> vì lý do gì?',opts:['Hiển thị to hơn','Có ngữ nghĩa nhấn mạnh, hỗ trợ tốt hơn cho trình đọc màn hình','Màu đỏ hơn','Không cần thẻ đóng'],a:1},
+{q:'Để căn giữa một đoạn văn bằng style, dùng thuộc tính nào?',opts:['color:center','text-align:center','font-align:center','align:middle'],a:1},
+{q:'Thẻ <span> là phần tử loại nào?',opts:['Block (khối)','Inline (nội tuyến)','Table','List'],a:1},
+{q:'Thẻ <div> là phần tử loại nào?',opts:['Inline','Block (khối, bắt đầu dòng mới)','Image','Link'],a:1},
+{q:'Để đổi màu chữ thành đỏ bằng style, viết như thế nào?',opts:['style="color:red"','style="font-color:red"','style="text:red"','color="red"'],a:0},
+{q:'Để đặt cỡ chữ 24px, thuộc tính style nào đúng?',opts:['font-size:24px','size:24','font:24px','text-size:24px'],a:0},
+{q:'Khi thiết kế trang giới thiệu sản phẩm muốn làm nổi bật tên sản phẩm, nên dùng thẻ nào?',opts:['<small>','<strong> hoặc <mark>','<del>','<br>'],a:1}
+],
+tf:[
+{q:'Về cú pháp và các thành phần định dạng văn bản cơ bản trong HTML.',st:[
+{t:'Cú pháp chung để bổ sung thuộc tính cho một thẻ HTML là đặt trong thẻ mở, sau tên thẻ.',c:true},
+{t:'Thẻ <h1> hiển thị tiêu đề với kích thước nhỏ nhất, còn <h6> là lớn nhất.',c:false},
+{t:'Để căn giữa một đoạn văn <p>, ta có thể sử dụng style="text-align:center".',c:true},
+{t:'Thẻ <span> được sử dụng để định dạng theo khối (block).',c:false}
+]},
+{q:'Về thẻ in đậm, in nghiêng và chỉ số.',st:[
+{t:'Thẻ <b> và <strong> đều có tác dụng làm in đậm văn bản.',c:true},
+{t:'Để hiển thị chỉ số dưới (như số 2 trong H₂O), ta dùng thẻ <sub>.',c:true},
+{t:'Để thiết lập màu chữ, cỡ chữ và phông chữ, ta có thể dùng thuộc tính style.',c:true},
+{t:'Muốn hiển thị x² đúng dạng số mũ, ta dùng <sub>2</sub>.',c:false}
+]},
+{q:'Về thẻ tiêu đề và vị trí trong cấu trúc HTML.',st:[
+{t:'Thẻ <title> nằm bên trong phần <head> của trang HTML.',c:true},
+{t:'Thẻ <h1> đến <h6> dùng để tạo tiêu đề phân cấp trên trang.',c:true},
+{t:'Thẻ <p> tự động tạo khoảng cách trước và sau đoạn văn.',c:true},
+{t:'Thẻ <br> có thẻ đóng tương ứng là </br>.',c:false}
+]},
+{q:'Về thuộc tính style và định dạng nâng cao.',st:[
+{t:'Nhiều thuộc tính trong style được ngăn cách bởi dấu chấm phẩy ;.',c:true},
+{t:'style="color:blue; font-size:18px" làm chữ màu xanh và cỡ 18px.',c:true},
+{t:'Thẻ <mark> dùng để tô sáng (highlight) văn bản.',c:true},
+{t:'Thẻ <div> là phần tử inline, không xuống dòng.',c:false}
+]},
+{q:'Về thực hành định dạng văn bản.',st:[
+{t:'Thẻ <em> được ưu tiên hơn <i> khi muốn nhấn mạnh ngữ nghĩa in nghiêng.',c:true},
+{t:'Thẻ <strong> được ưu tiên hơn <b> khi muốn nhấn mạnh ngữ nghĩa in đậm.',c:true},
+{t:'Có thể kết hợp nhiều thẻ định dạng lồng nhau.',c:true},
+{t:'Thuộc tính style chỉ dùng được với thẻ <p>, không dùng với <h1>.',c:false}
+]}
+]},
+b9:{
+name:"Bài 9",
+mc:[
+{q:'Đoạn mã nào dùng để tạo danh sách có thứ tự (số 1, 2, 3…)?',opts:['<ul><li>Táo</li><li>Cam</li></ul>','<dl><dt>Táo</dt><dd>Quả táo</dd></dl>','<ol><li>Táo</li><li>Cam</li></ol>','<table><tr><td>Táo</td></tr></table>'],a:2},
+{q:'Thẻ nào dùng để tạo một hàng ngang trong bảng?',opts:['<td>','<th>','<tr>','<col>'],a:2},
+{q:'Khi muốn gộp các ô theo chiều ngang (nhiều cột), thuộc tính nào được dùng?',opts:['rowspan','colspan','width','height'],a:1},
+{q:'Cho <ol type="A" start="2"><li>Táo</li></ol>. Kết quả đánh số của "Táo" là?',opts:['1.','A.','B.','b.'],a:2},
+{q:'Đoạn mã nào thể hiện đúng cấu trúc danh sách mô tả?',opts:['<ul><li>HTML: Ngôn ngữ đánh dấu</li></ul>','<dl><item>HTML</item><desc>Ngôn ngữ đánh dấu</desc></dl>','<dl><dt>HTML</dt><dd>Ngôn ngữ đánh dấu</dd></dl>','<ol><dt>HTML</dt><dd>Ngôn ngữ đánh dấu</dd></ol>'],a:2},
+{q:'Để tạo bảng 2 hàng, mỗi hàng 2 ô, đoạn nào đúng cú pháp cơ bản?',opts:['<table><td>Ô1</td><td>Ô2</td><td>Ô3</td><td>Ô4</td></table>','<table><tr><td>Ô1</td><td>Ô2</td></tr><tr><td>Ô3</td><td>Ô4</td></tr></table>','<table><tr>Ô1, Ô2</tr><tr>Ô3, Ô4</tr></table>','<table><row><col>Ô1</col></row></table>'],a:1},
+{q:'Em muốn danh sách có thứ tự đánh số chữ cái thường (a, b…). Đoạn nào đúng?',opts:['<ul style="a"><li>Toán</li></ul>','<ol type="a"><li>Toán</li><li>Văn</li></ol>','<ol type="A"><li>Toán</li></ol>','<ol style="type:a"><li>Toán</li></ol>'],a:1},
+{q:'Thẻ nào tạo danh sách không có thứ tự (dấu chấm đầu dòng)?',opts:['<ol>','<ul>','<dl>','<table>'],a:1},
+{q:'Thuộc tính rowspan dùng để làm gì?',opts:['Gộp ô theo chiều ngang','Gộp ô theo chiều dọc (nhiều hàng)','Đặt chiều rộng bảng','Tạo đường viền'],a:1},
+{q:'Thẻ <th> dùng để làm gì trong bảng?',opts:['Tạo ô dữ liệu thường','Tạo ô tiêu đề (thường in đậm, căn giữa)','Tạo hàng','Tạo tiêu đề bảng'],a:1},
+{q:'Thẻ <caption> dùng để làm gì?',opts:['Tạo ô dữ liệu','Tạo tiêu đề cho bảng','Tạo hàng','Gộp ô'],a:1},
+{q:'Để bắt đầu đánh số từ 3 trong danh sách có thứ tự, dùng thuộc tính nào?',opts:['type="3"','start="3"','begin="3"','from="3"'],a:1},
+{q:'Danh sách lồng nhau (nested list) được tạo bằng cách nào?',opts:['Đặt một danh sách bên trong thẻ <li> của danh sách khác','Dùng thuộc tính nest="true"','Không thể tạo danh sách lồng nhau','Chỉ dùng được với <table>'],a:0},
+{q:'Thẻ nào tạo khung bảng gốc?',opts:['<tr>','<td>','<table>','<th>'],a:2},
+{q:'Với <ul>, để đổi ký hiệu đầu dòng thành hình vuông, có thể dùng?',opts:['type="square" hoặc style="list-style-type:square"','start="square"','border="square"','Không thể đổi'],a:0},
+{q:'Cho bảng có ô "Thứ Hai" với rowspan="2". Ô này sẽ?',opts:['Chiếm 2 cột','Chiếm độ cao tương ứng 2 hàng','Bị ẩn','Chỉ chiếm 1 hàng'],a:1},
+{q:'Thẻ <td> dùng để tạo gì?',opts:['Hàng trong bảng','Ô dữ liệu thường','Ô tiêu đề','Tiêu đề bảng'],a:1},
+{q:'Để tạo danh sách mô tả thuật ngữ, cặp thẻ nào đúng?',opts:['<ul> + <li>','<ol> + <li>','<dl> + <dt> + <dd>','<table> + <tr>'],a:2},
+{q:'Khi gộp ô bằng colspan, trong các cột bị gộp ta cần?',opts:['Thêm nhiều <td> hơn','Bỏ qua các thẻ <td>/<th> tương ứng để tránh lỗi cấu trúc','Dùng rowspan thay thế','Không cần làm gì'],a:1},
+{q:'Thuộc tính border trên <table> dùng để?',opts:['Gộp ô','Tạo đường viền cho bảng','Đặt chiều cao','Tạo tiêu đề'],a:1}
+],
+tf:[
+{q:'Về các thẻ tạo danh sách trong HTML.',st:[
+{t:'Cặp thẻ <ul>...</ul> được sử dụng để tạo danh sách có thứ tự.',c:false},
+{t:'Cặp thẻ <ol>...</ol> tạo danh sách không có thứ tự và mặc định hiển thị dấu chấm đầu dòng.',c:false},
+{t:'Trong danh sách mô tả <dl>, thẻ <dt> dùng để khai báo thuật ngữ; thẻ <dd> dùng để chứa nội dung mô tả.',c:true},
+{t:'Để tạo danh sách có thứ tự bắt đầu từ chữ B (type chữ hoa), ta dùng <ol start="2" type="A">.',c:true}
+]},
+{q:'Về các thẻ và thuộc tính tạo bảng trong HTML.',st:[
+{t:'Thẻ <tr> được sử dụng để tạo một hàng trong bảng.',c:true},
+{t:'Thẻ <th> được sử dụng để khai báo ô tiêu đề của bảng.',c:true},
+{t:'Để tạo tiêu đề chung cho bảng, ta có thể sử dụng thẻ <h1>.',c:false},
+{t:'Thuộc tính colspan="2" gộp 2 ô theo chiều ngang; rowspan="2" gộp theo chiều dọc.',c:true}
+]},
+{q:'Cho đoạn mã bảng lịch học có rowspan và colspan.',st:[
+{t:'Phần tiêu đề cột ("Ngày", "Thời gian", "Nội dung") được đặt trong các thẻ <td>.',c:false},
+{t:'Thẻ <table> được dùng để chứa phần dữ liệu chính của bảng.',c:true},
+{t:'Ô "Thứ Hai" sử dụng rowspan="2" nên chiếm độ cao tương ứng với 2 hàng.',c:true},
+{t:'Ở hàng "Thứ Ba", colspan="2" giúp gộp 2 cột thành một ô duy nhất.',c:true}
+]},
+{q:'Về danh sách không thứ tự và thuộc tính.',st:[
+{t:'Thẻ <ul> tạo danh sách không có thứ tự, mặc định dấu chấm tròn đầu dòng.',c:true},
+{t:'Thẻ <li> dùng để định nghĩa từng phần tử trong danh sách.',c:true},
+{t:'Khi dùng <ul>, các phần tử sẽ được đánh số tự động 1, 2, 3.',c:false},
+{t:'Có thể thêm type="square" hoặc style list-style-type để đổi ký hiệu đầu dòng.',c:true}
+]},
+{q:'Về danh sách mô tả.',st:[
+{t:'Thẻ <dl> khai báo một danh sách mô tả.',c:true},
+{t:'Các thuật ngữ được đặt trong cặp thẻ <dt>...</dt>.',c:true},
+{t:'Phần mô tả nằm trong <dd> và thường thụt vào so với thuật ngữ.',c:true},
+{t:'Nếu thay <dl> bằng <ol> và <dt>/<dd> bằng <li>, trình duyệt vẫn hiển thị đúng cấu trúc danh sách mô tả.',c:false}
+]}
+]},
+b10:{
+name:"Bài 10",
+mc:[
+{q:'Để tạo liên kết trong HTML, thẻ nào được sử dụng?',opts:['<link>','<href>','<a>','<url>'],a:2},
+{q:'Thuộc tính nào của thẻ <a> chứa đường dẫn đến tài nguyên đích?',opts:['src','href','link','target'],a:1},
+{q:'Trong đường dẫn tương đối, ký hiệu ../ dùng để làm gì?',opts:['Đi tới thư mục con','Trở về trang chủ Internet','Tải lại trang web hiện tại','Lùi lại một cấp thư mục (thư mục cha)'],a:3},
+{q:'Bạn muốn liên kết từ index.html đến gioithieu.html (cùng thư mục). Đoạn nào đúng?',opts:['<a href="gioithieu.html">Giới thiệu</a>','<a href="../gioithieu.html">Giới thiệu</a>','<a href="/info/gioithieu.html">Giới thiệu</a>','<a href="https://gioithieu.html">Giới thiệu</a>'],a:0},
+{q:'Từ index.html (thư mục gốc) muốn liên kết đến lienhe.html trong thư mục con info. Đoạn nào đúng?',opts:['<a href="../lienhe.html">Liên hệ</a>','<a href="lienhe.html">Liên hệ</a>','<a href="info/lienhe.html">Liên hệ</a>','<a href="#lienhe">Liên hệ</a>'],a:2},
+{q:'Để liên kết <a href="#CLBTT">Xem lịch</a> hoạt động, phần đích cần có thuộc tính gì?',opts:['class="CLBTT"','id="CLBTT"','name="CLBTT"','href="CLBTT"'],a:1},
+{q:'Để biến ảnh logo.png thành liên kết mở trangchu.html, đoạn nào đúng?',opts:['<img src="logo.png">','<a href="trangchu.html"><img src="logo.png"></a>','<a logo.png><img href="trangchu.html"></a>','<img href="logo.png" src="trangchu.html">'],a:1},
+{q:'Đâu là ví dụ đường dẫn tuyệt đối đúng cú pháp?',opts:['<a href="gioithieu.html">Giới thiệu</a>','<a href="info/lienhe.html">Liên hệ</a>','<a href="https://tuoitre.vn">Báo Tuổi Trẻ</a>','<a href="#lich">Xem lịch</a>'],a:2},
+{q:'Khi nào bắt buộc dùng đường dẫn tuyệt đối?',opts:['Liên kết hai trang cùng thư mục','Liên kết trang chủ đến trang con cùng website','Liên kết đến trang web ngoài hệ thống (báo, mạng xã hội…)','Liên kết nhảy đến id trong cùng trang'],a:2},
+{q:'Từ sanpham.html (trong thư mục danhmuc) muốn quay về trangchu.html (thư mục cha). Đoạn nào đúng?',opts:['<a href="trangchu.html">Trang chủ</a>','<a href="danhmuc/trangchu.html">Trang chủ</a>','<a href="../trangchu.html">Trang chủ</a>','<a href="#trangchu">Trang chủ</a>'],a:2},
+{q:'Thuộc tính href có nhiệm vụ gì?',opts:['Chứa tên hiển thị của liên kết','Định dạng màu sắc liên kết','Chứa địa chỉ đường dẫn (URL) trang đích','Xác định kích thước khung'],a:2},
+{q:'Để chèn hình ảnh logo.png vào trang web, đoạn nào đúng?',opts:['<img src="logo.png">','<image href="logo.png">','<picture link="logo.png">','<photo file="logo.png">'],a:0},
+{q:'Liên kết tới vị trí trong cùng trang dùng cú pháp nào?',opts:['href="file.html"','href="#id"','href="../id"','href="id.html"'],a:1},
+{q:'Đường dẫn tương đối mô tả vị trí tài nguyên như thế nào?',opts:['Có đầy đủ http:// và tên miền','So với vị trí file hiện tại, không cần giao thức/tên miền','Luôn bắt đầu bằng /','Chỉ dùng cho hình ảnh'],a:1},
+{q:'Để liên kết đến https://moet.gov.vn với dòng chữ "Cổng thông tin Bộ GD&ĐT", đoạn nào đúng?',opts:['<a href="https://moet.gov.vn">Cổng thông tin Bộ GD&ĐT</a>','<link href="https://moet.gov.vn">Cổng thông tin Bộ GD&ĐT</link>','<a name="https://moet.gov.vn">Cổng thông tin Bộ GD&ĐT</a>','<a url="https://moet.gov.vn">Cổng thông tin Bộ GD&ĐT</a>'],a:0},
+{q:'Hai file index.html và gioithieu.html cùng thư mục. Từ index liên kết đến gioithieu, đoạn nào đúng?',opts:['<a href="https://gioithieu.html">Giới thiệu</a>','<a href="../gioithieu.html">Giới thiệu</a>','<a href="gioithieu.html">Giới thiệu</a>','<a href="#gioithieu">Giới thiệu</a>'],a:2},
+{q:'Để biến ảnh home.png thành nút mở index.html, đoạn nào đúng?',opts:['<img href="index.html" src="home.png">','<a href="index.html"><img src="home.png"></a>','<a src="home.png"><img href="index.html"></a>','<img href="home.png"><a src="index.html"></a>'],a:1},
+{q:'Siêu liên kết (hyperlink) là gì?',opts:['Một đoạn văn bản thuần túy','Điểm (văn bản/ảnh) khi nhấn sẽ dẫn đến tài nguyên khác','Thẻ định dạng chữ','Phần mềm soạn thảo'],a:1},
+{q:'Đường dẫn tuyệt đối bao gồm những thành phần nào?',opts:['Chỉ tên file','Giao thức (http/https) + tên miền + đường dẫn','Chỉ ../ và tên file','Chỉ #id'],a:1},
+{q:'Khi tạo liên kết bằng hình ảnh, cấu trúc đúng là?',opts:['<img> bọc ngoài <a>','<a href="..."> bọc ngoài <img src="...">','Chỉ cần <img href="...">','<link> bọc <img>'],a:1}
+],
+tf:[
+{q:'Về khái niệm siêu văn bản và thẻ tạo liên kết trong HTML.',st:[
+{t:'Trong HTML, thẻ <a> cùng thuộc tính href được sử dụng để tạo liên kết.',c:true},
+{t:'Đường dẫn tuyệt đối ghi đầy đủ giao thức (http:// hoặc https://), tên miền và đường dẫn.',c:true},
+{t:'Đường dẫn tuyệt đối mô tả vị trí tài liệu dựa trên vị trí file hiện tại, dùng để liên kết trong cùng website.',c:false},
+{t:'Để liên kết tới file trong thư mục con data, giá trị href cần là href="data/thong_tin.html".',c:true}
+]},
+{q:'Về các trường hợp và cách thức tạo liên kết trong HTML.',st:[
+{t:'Để nhảy đến vị trí cụ thể trong cùng trang, ta dùng cú pháp href="#id".',c:true},
+{t:'Ta có thể viết <a href="thong_tin.html"><img src="anh.png"></a> để tạo liên kết bằng hình ảnh.',c:true},
+{t:'Khi tạo liên kết tới file ở thư mục cha, giá trị href sử dụng ký hiệu ../tenfile.html.',c:true},
+{t:'Khai báo <a href="thptabc.edu.vn">Website trường</a> là hoàn toàn đúng cú pháp đường dẫn tuyệt đối.',c:false}
+]},
+{q:'Học sinh Minh viết mã liên kết đến website trường THPT Quang Trung.',st:[
+{t:'Đoạn mã hiển thị dòng chữ "Website trường THPT Quang Trung" làm nội dung của liên kết.',c:true},
+{t:'Thuộc tính href nhận giá trị là một đường dẫn tuyệt đối trên Internet.',c:true},
+{t:'Khi nhấp chuột, trình duyệt điều hướng đến https://thptquangtrung.hcm.edu.vn/.',c:true},
+{t:'Nếu bỏ https:// chỉ còn thptquangtrung.hcm.edu.vn/, trình duyệt vẫn truy cập thành công website ngoài Internet.',c:false}
+]},
+{q:'Bạn Lan liên kết index.html với thoikhoabieu.html cùng thư mục.',st:[
+{t:'Giá trị thoikhoabieu.html trong href là một đường dẫn tuyệt đối.',c:false},
+{t:'Đoạn mã hiển thị dòng chữ "Xem thời khóa biểu" làm nội dung của liên kết.',c:true},
+{t:'Vì hai file cùng thư mục, dùng tên file làm href giúp mở đúng trang khi bấm.',c:true},
+{t:'Nếu chuyển thoikhoabieu.html vào thư mục con cac_trang, cần đổi href="cac_trang/thoikhoabieu.html".',c:true}
+]},
+{q:'Bạn Huy tạo liên kết cuộn đến bảng lịch tập trong cùng trang.',st:[
+{t:'Thẻ <h2> chứa id="lichtap" để đánh dấu vị trí đích đến trong trang.',c:true},
+{t:'Thẻ <a> dùng href="#lichtap" để tạo liên kết trong cùng một trang.',c:true},
+{t:'Khi nhấp liên kết, trình duyệt tự động cuộn tới phần tiêu đề có id tương ứng.',c:true},
+{t:'Để liên kết hoạt động đúng, giá trị href và id phải viết giống hệt nhau (bao gồm cả dấu #, ví dụ id="#lichtap").',c:false}
+]}
+]}
+};
+
+let mode='round', queue=[], idx=0, score=0, total=0;
+let timer=null, timeLeft=60, timeMC=60, timeTF=75;
+let answered=false, tfAns=[];
+
+function setMode(m){
+  mode=m;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
+  document.getElementById('opt-round').classList.toggle('hidden',m!=='round');
+  document.getElementById('opt-sample').classList.toggle('hidden',m!=='sample');
+  document.getElementById('opt-lesson').classList.toggle('hidden',m!=='lesson');
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function packMC(q,lesson,name){
+  const order=shuffle([0,1,2,3]);
+  return {type:'mc',lesson,name,q:q.q,opts:order.map(i=>q.opts[i]),a:order.indexOf(q.a)};
+}
+function packTF(t,lesson,name){
+  return {type:'tf',lesson,name,q:t.q,st:shuffle(t.st.map(s=>({...s})))};
+}
+function buildQueue(){
+  timeMC=parseInt(document.getElementById('time-mc').value)||60;
+  timeTF=parseInt(document.getElementById('time-tf').value)||75;
+  queue=[];
+  const keys=['b7','b8','b9','b10'];
+  if(mode==='round'){
+    const k=document.getElementById('sel-round').value;
+    const L=BANK[k];
+    shuffle(L.mc).forEach(q=>queue.push(packMC(q,k,L.name)));
+    shuffle(L.tf).forEach(t=>queue.push(packTF(t,k,L.name)));
+  } else if(mode==='lesson'){
+    const k=document.getElementById('sel-lesson').value;
+    const L=BANK[k];
+    shuffle(L.mc).forEach(q=>queue.push(packMC(q,k,L.name)));
+    shuffle(L.tf).forEach(t=>queue.push(packTF(t,k,L.name)));
+  } else if(mode==='sample'){
+    let all=[];
+    keys.forEach(k=>{const L=BANK[k];L.mc.forEach(q=>all.push(packMC(q,k,L.name)));L.tf.forEach(t=>all.push(packTF(t,k,L.name)));});
+    all=shuffle(all);
+    const n=Math.min(parseInt(document.getElementById('num-sample').value)||20,all.length);
+    queue=all.slice(0,n);
+  } else {
+    keys.forEach(k=>{const L=BANK[k];shuffle(L.mc).forEach(q=>queue.push(packMC(q,k,L.name)));shuffle(L.tf).forEach(t=>queue.push(packTF(t,k,L.name)));});
+    queue=shuffle(queue);
+  }
+  total=queue.length;
+}
+function startGame(){
+  buildQueue();
+  if(!total){alert('Không có câu hỏi.');return;}
+  idx=0;score=0;
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('game').classList.remove('hidden');
+  showQ();
+}
+function startTimer(sec){
+  clearInterval(timer);timeLeft=sec;updateTimerUI();
+  timer=setInterval(()=>{timeLeft--;updateTimerUI();if(timeLeft<=0){clearInterval(timer);lockTimeout();}},1000);
+}
+function updateTimerUI(){
+  const fill=document.getElementById('timer-fill'),text=document.getElementById('timer-text');
+  const item=queue[idx],maxT=item.type==='mc'?timeMC:timeTF;
+  fill.style.width=(timeLeft/maxT*100)+'%';text.textContent=timeLeft+'s';
+  fill.className='timer-fill';text.className='timer-text';
+  if(timeLeft<=10){fill.classList.add('danger');text.classList.add('danger');}
+  else if(timeLeft<=20){fill.classList.add('warn');text.classList.add('warn');}
+}
+function showQ(){
+  answered=false;clearInterval(timer);
+  const item=queue[idx];
+  document.getElementById('round-tag').textContent=item.name;
+  document.getElementById('q-counter').textContent=`Câu ${idx+1}/${total}`;
+  document.getElementById('score-display').textContent='Điểm: '+Math.round(score*10)/10;
+  document.getElementById('feedback').classList.add('hidden');
+  document.getElementById('next-btn').disabled=true;
+  document.getElementById('next-btn').textContent=idx===total-1?'Xem kết quả':'Câu tiếp';
+  const qEl=document.getElementById('q-text'),optEl=document.getElementById('options');
+  optEl.innerHTML='';
+  if(item.type==='mc'){
+    qEl.textContent=item.q;
+    item.opts.forEach((o,i)=>{
+      const btn=document.createElement('button');btn.className='option';
+      btn.innerHTML=`<span class="opt-letter">${'ABCD'[i]}.</span><span>${esc(o)}</span>`;
+      btn.onclick=()=>selectMC(i);optEl.appendChild(btn);
+    });
+    startTimer(timeMC);
+  } else {
+    qEl.textContent=item.q;tfAns=new Array(item.st.length).fill(null);
+    item.st.forEach((s,i)=>{
+      const row=document.createElement('div');row.className='tf-row';
+      row.innerHTML=`<div class="tf-text"><strong>${'abcd'[i]})</strong> ${esc(s.t)}</div>
+        <div class="tf-btns">
+          <button class="option" onclick="selectTF(${i},true,this)">Đúng</button>
+          <button class="option" onclick="selectTF(${i},false,this)">Sai</button>
+        </div>`;
+      optEl.appendChild(row);
+    });
+    startTimer(timeTF);
+  }
+}
+function selectMC(i){
+  if(answered||timeLeft<=0)return;answered=true;clearInterval(timer);
+  const item=queue[idx];
+  document.querySelectorAll('#options .option').forEach((o,k)=>{
+    o.classList.add('disabled');if(k===item.a)o.classList.add('correct');if(k===i&&k!==item.a)o.classList.add('wrong');
+  });
+  const fb=document.getElementById('feedback');fb.classList.remove('hidden');
+  if(i===item.a){score+=1;fb.className='feedback ok';fb.textContent='Chính xác!';}
+  else{fb.className='feedback err';fb.textContent='Chưa đúng. Đáp án: '+('ABCD'[item.a]);}
+  document.getElementById('score-display').textContent='Điểm: '+Math.round(score*10)/10;
+  document.getElementById('next-btn').disabled=false;
+}
+function selectTF(si,choice,btn){
+  if(tfAns[si]!==null||timeLeft<=0)return;
+  const item=queue[idx];tfAns[si]=choice;const correct=item.st[si].c;
+  const parent=btn.parentElement;parent.querySelectorAll('.option').forEach(b=>b.classList.add('disabled'));
+  if(choice===correct){btn.classList.add('correct');score+=0.25;}
+  else{btn.classList.add('wrong');parent.querySelectorAll('.option').forEach(b=>{
+    if((b.textContent.trim()==='Đúng'&&correct)||(b.textContent.trim()==='Sai'&&!correct))b.classList.add('correct');
+  });}
+  document.getElementById('score-display').textContent='Điểm: '+Math.round(score*10)/10;
+  if(tfAns.every(x=>x!==null)){clearInterval(timer);document.getElementById('next-btn').disabled=false;
+    const fb=document.getElementById('feedback');fb.classList.remove('hidden');fb.className='feedback ok';fb.textContent='Đã xong câu Đúng/Sai!';}
+}
+function lockTimeout(){
+  const item=queue[idx];
+  if(item.type==='mc'){if(answered)return;answered=true;
+    document.querySelectorAll('#options .option').forEach((o,k)=>{o.classList.add('disabled');if(k===item.a)o.classList.add('correct');});
+  } else {
+    item.st.forEach((s,i)=>{if(tfAns[i]!==null)return;
+      const row=document.querySelectorAll('.tf-row')[i];if(!row)return;
+      row.querySelectorAll('.option').forEach(b=>{b.classList.add('disabled');
+        if((b.textContent.trim()==='Đúng'&&s.c)||(b.textContent.trim()==='Sai'&&!s.c))b.classList.add('correct');});
+      tfAns[i]='t';
+    });
+  }
+  document.getElementById('next-btn').disabled=false;
+  const fb=document.getElementById('feedback');fb.classList.remove('hidden');fb.className='feedback err';fb.textContent='Hết giờ!';
+}
+function nextQ(){clearInterval(timer);idx++;if(idx>=total)showResult();else showQ();}
+function showResult(){
+  clearInterval(timer);document.getElementById('game').classList.add('hidden');document.getElementById('result').classList.remove('hidden');
+  const sc=Math.round(score*10)/10;document.getElementById('final-score').textContent=sc+' / '+total;
+  const ratio=score/total;
+  document.getElementById('result-msg').textContent=ratio>=0.85?'Xuất sắc! Em nắm rất vững.':ratio>=0.65?'Tốt lắm! Ôn thêm một chút nữa.':ratio>=0.45?'Khá ổn. Nên xem lại phần còn yếu.':'Em cần ôn lại kỹ hơn nhé!';
+  document.getElementById('detail-score').textContent=`Đã làm ${total} câu · Xáo trộn câu hỏi và đáp án.`;
+}
+</script>
+</body>
+</html>
